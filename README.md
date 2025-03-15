@@ -1,1 +1,1 @@
-Linux-programming stepik cource 2025 - 2026
+Linux-programming stepik cource: https://stepik.org/course/548/syllabus
