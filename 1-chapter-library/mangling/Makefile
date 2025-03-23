@@ -9,5 +9,8 @@ all: $(EXE)
 %.o: %.c %.h
 	$(CC) -c $< -o $@ 	
 
-$(EXE): $(OBJ)
+$(EXE): main.cpp $(OBJ)
 	$(CPP) $^ -o $@
+
+clean:
+	-rm $(OBJ) $(EXE)
