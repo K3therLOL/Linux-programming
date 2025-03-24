@@ -1,5 +1,4 @@
 CC=gcc
-CFLAGS=-L. -lHello 
 
 SRC=$(filter-out main.c, $(wildcard *.c))
 HEAD=$(wildcard *.h)
@@ -17,7 +16,6 @@ all: $(EXE)
 
 $(LIB): $(OBJ)	
 	ar rcs $@ $^
-	rm $^
 
 $(EXE): $(LIB) $(OBJ)
 	$(CC) main.c -L. -lHello -o $@
