@@ -59,7 +59,7 @@ static char *pid2path(pid_t pid)
 { 
     char *pid_s = pid2str(pid);
     
-    char *pid_parts[] = { "/proc/", pid_s, "/status", NULL };
+    char *pid_parts[] = { "/proc/", pid_s, "/stat", NULL };
 
     size_t path_size = get_path_size(pid_parts);
     char *path = (char *)calloc(path_size, sizeof(char));
@@ -74,52 +74,38 @@ static char *pid2path(pid_t pid)
     return path;
 }
 
-#define BUF 6
-pid_t get_ppid(void)
+void go2init(pid_t pid)
 {
-    pid_t pid = getpid();
-    printf("%d\n", pid);    
-    FILE *fp = fopen(pid2path(pid), "r");
-    if(fp == NULL) {
-        perror("fopen");
-        exit(EXIT_FAILURE);
-    }
-    
-    char *ppid_s = (char *)calloc(get_pidmax(), sizeof(char));
-    if(ppid_s == NULL) {
-        fclose(fp);
-        exit(EXIT_FAILURE);
-    }
-
-    char word[BUF] = {0};
-    while(fscanf(fp, "%5s", word) && strcmp(word, "PPid:"))
-        ;
-    long offset = ftell(fp);
-
-    fscanf(fp, "%s", ppid_s);
-    printf("%s\n", ppid_s);
-    pid = atoi(ppid_s);
-    fclose(fp);
+    pid_t ppid;
     do
     {
-        fp = fopen(pid2path(pid), "r");
+        printf("%d\n", pid);
+
+        FILE *fp = fopen(pid2path(pid), "r");
         if(fp == NULL) {
             perror("fopen");
-            exit(EXIT_FAILURE);
+            exit(1);
         }
 
-        fseek(fp, offset, SEEK_CUR);
-        fscanf(fp, "%s", ppid_s);
-        printf("%s\n", ppid_s);
-        pid = atoi(ppid_s);
+        fscanf(fp, "%*d %*s %*c %d", &ppid);
+        pid = ppid;
+    }while(ppid != 1);
 
-        fclose(fp);
-    }while(pid != 1);
-
-    return pid;
+    printf("%d\n", pid);
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    get_ppid();
+    if(argc != 2) {
+        fprintf(stderr, "Usage: %s <pid>\n", argv[0]);
+        exit(1);
+    }
+
+    pid_t pid = atoi(argv[1]);
+    if(pid == 0) {
+        fprintf(stderr, "Invalid PID\n");
+        exit(1);
+    }
+
+    go2init(pid);
 }
