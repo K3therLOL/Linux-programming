@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUF 10
 size_t get_pidmax(void)
 {
     FILE *fp = fopen("/proc/sys/kernel/pid_max", "r");
@@ -26,29 +27,32 @@ char *get_path(pid_t pid)
     char *path = (char *)calloc(buf, sizeof(char));
     if(path == NULL) {
         perror("calloc");
-        exit(1);
+        return NULL;
     }
 
     sprintf(path, "/proc/%d/task/%d/children", pid, pid);
     return path;
 }
 
-#define BUF 10
 void rec_children(pid_t pid, int *cnt)
 {
+    FILE *fp = NULL; pid_t *children = NULL;
     char *path = get_path(pid);
-    
-    FILE *fp = fopen(path, "r");
+    if(path == NULL) {
+        return;
+    }
+
+    fp = fopen(path, "r");
     if(fp == NULL) {
         perror("fopen");
-        exit(1);
+        goto clean;
     }
 
     size_t size = 0, cap = BUF;
-    pid_t *children = (pid_t *)malloc(cap * sizeof(int));
+    children = (pid_t *)malloc(cap * sizeof(int));
     if(children == NULL) { 
         perror("malloc");
-        exit(1);
+        goto clean;
     }
 
     pid_t child;
@@ -61,17 +65,23 @@ void rec_children(pid_t pid, int *cnt)
             children = (pid_t *)realloc(children, cap * sizeof(pid_t));
             if(children == NULL) {
                 perror("realloc");
-                exit(1);
+                goto clean;
             }
         }
     }
 
     fclose(fp);
-
-    for (size_t i = 0; i < size; ++i) {
+    fp = NULL;
+    
+    size_t i;
+    for (i = 0; i < size; ++i) {
         rec_children(children[i], cnt);
     }
     
+clean:
+    if(fp != NULL) {
+        fclose(fp);
+    }
     free(children);
     free(path);
 }
@@ -81,6 +91,7 @@ int children(pid_t pid)
     int cnt = 0;
     rec_children(pid, &cnt);
     
+    cnt++;
     return cnt;
 }
 
@@ -88,15 +99,16 @@ int main(int argc, char **argv)
 {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <pid>\n", argv[0]);
-        exit(1);
+        return EXIT_FAILURE;
     }
     
     char *endptr = NULL;
     pid_t pid = strtoul(argv[1], &endptr, 10);
     if(pid == 0 || *endptr != '\0') {
         fprintf(stderr, "Invalid pid.\n");
-        exit(1);
+        return EXIT_FAILURE;
     }
 
     printf("%d\n", children(pid));
+    return EXIT_SUCCESS;
 }
