@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static size_t get_pidmax(void)
+size_t get_pidmax(void)
 {
     FILE *fp = fopen("/proc/sys/kernel/pid_max", "r");
     if(fp == NULL) {
@@ -21,7 +21,7 @@ static size_t get_pidmax(void)
     return pid_max_size;
 }
 
-static char *pid2str(pid_t pid)
+char *pid2str(pid_t pid)
 {
     size_t pid_buf = get_pidmax() + 1;
     char *pid_s = (char *)calloc(pid_buf, sizeof(char));
@@ -34,7 +34,7 @@ static char *pid2str(pid_t pid)
     return pid_s;
 }
 
-static size_t get_path_size(char **pid_parts)
+size_t get_path_size(char **pid_parts)
 {
     size_t buf = 0;
     
@@ -46,7 +46,8 @@ static size_t get_path_size(char **pid_parts)
     buf++;
     return buf;
 }
-static char *create_path(char *path, char **pid_parts) 
+
+char *create_path(char *path, char **pid_parts) 
 {
     char **p;
     for(p = pid_parts; *p != NULL; p++) {
@@ -55,7 +56,7 @@ static char *create_path(char *path, char **pid_parts)
 
     return path;
 }
-static char *pid2path(pid_t pid)
+char *pid2path(pid_t pid)
 { 
     char *pid_s = pid2str(pid);
     
@@ -77,11 +78,11 @@ static char *pid2path(pid_t pid)
 void go2init(pid_t pid)
 {
     pid_t ppid;
-    do
+    while(pid != 1)
     {
         printf("%d\n", pid);
-
-        FILE *fp = fopen(pid2path(pid), "r");
+        char *path = pid2path(pid);
+        FILE *fp = fopen(path, "r");
         if(fp == NULL) {
             perror("fopen");
             exit(1);
@@ -89,7 +90,10 @@ void go2init(pid_t pid)
 
         fscanf(fp, "%*d %*s %*c %d", &ppid);
         pid = ppid;
-    }while(ppid != 1);
+
+        fclose(fp); 
+        free(path);
+    }
 
     printf("%d\n", pid);
 }
