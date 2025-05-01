@@ -1,29 +1,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/shm.h>
+#define BUF  1000
+#define SIZE 100
 
-int *create_shm(void)
+int *get_integers(key_t key)
 {
-    int shmid = shmget(IPC_PRIVATE, 1000, IPC_CREAT | 0666);
-    if (shmid == -1) {
-        perror("shmget");
+    int shmid = shmget(key, BUF, 0);
+    if(shmid == -1) {
+        perror("shmid");
         exit(1);
     }
-    
+
     int *shmaddr = (int *)shmat(shmid, NULL, 0);
-    for (int i = 0; i < 100; ++i) {
-        shmaddr[i] = i;
+    if (shmaddr == (void *)-1) {
+        perror("shmaddr");
+        exit(1);
     }
 
     return shmaddr;
 }
 
-int main()
+key_t insert_integers(const int *x, const int *y)
 {
-    int *arr1 = create_shm();
-    int *arr2 = create_shm();
-
-    for (int i = 0; i < 100; ++i) {
-        printf("%d + %d = %d\n", arr1[i], arr2[i], arr1[i] + arr2[i]);
+    key_t key = rand();
+    int shmid = shmget(key, BUF, IPC_CREAT | 0666);
+    if (shmid == -1) {
+        perror("shmid");
+        exit(1);
     }
+    
+    int *shmaddr = (int *)shmat(shmid, NULL, 0);
+    if (shmaddr == (void *)-1) {
+        perror("shmaddr");
+        exit(1);
+    }
+
+    int i;
+    for (i = 0; i < SIZE; ++i) {
+        shmaddr[i] = x[i] + y[i];
+    }
+
+    shmdt(x);
+    shmdt(y);
+    shmdt(shmaddr);
+    return key;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <key_1> <key_2>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+     
+    printf("%d\n", insert_integers(get_integers(atoi(argv[1])), get_integers(atoi(argv[2]))));
+    return EXIT_SUCCESS;
 }
