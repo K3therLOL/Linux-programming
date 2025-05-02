@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ipc.h>
 #include <sys/shm.h>
-#define BUF  1000
-#define SIZE 100
+#define BUF     1000
+#define SIZE    100
+#define PROJ_ID 123
 
 int *get_integers(key_t key)
 {
@@ -21,9 +23,8 @@ int *get_integers(key_t key)
     return shmaddr;
 }
 
-key_t insert_integers(const int *x, const int *y)
+key_t insert_integers(key_t key, const int *x, const int *y)
 {
-    key_t key = rand();
     int shmid = shmget(key, BUF, IPC_CREAT | 0666);
     if (shmid == -1) {
         perror("shmid");
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Usage: %s <key_1> <key_2>\n", argv[0]);
         return EXIT_FAILURE;
     }
-     
-    printf("%d\n", insert_integers(get_integers(atoi(argv[1])), get_integers(atoi(argv[2]))));
+    key_t key = ftok(argv[0], PROJ_ID);     
+    printf("%d\n", insert_integers(key, get_integers(atoi(argv[1])), get_integers(atoi(argv[2]))));
     return EXIT_SUCCESS;
 }
