@@ -25,6 +25,9 @@ int file_sum(int fd)
         free(content);
         perror("size");
         exit(EXIT_FAILURE);
+    } else if(size == 0) {
+        fd = -1;
+        return 0;
     }
 
     content[size] = '\0';
@@ -81,8 +84,6 @@ int main()
         if (f2 != -1 && FD_ISSET(f2, &read_set)) {
             sum += file_sum(f2);
         }
-        
-        printf("%d\n", sum);
     }
 
     printf("%d\n", sum);
