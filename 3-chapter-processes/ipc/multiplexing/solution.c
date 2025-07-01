@@ -63,27 +63,23 @@ int main()
         return EXIT_FAILURE;
     }
 
+    int max_fd = f1 > f2 ? f1 : f2;
     fd_set read_set, inset;
     initialize_set(&read_set, f1, f2);
     int sum = 0;
     while (FD_ISSET(f1, &read_set) || FD_ISSET(f2, &read_set))
     {
-        // printf("%d %d\n", f1, f2);
-        int max_fd = f1 > f2 ? f1 : f2;
         inset = read_set;
         if (select(max_fd + 1, &inset, NULL, NULL, NULL) == -1) {
             perror("select");
             return EXIT_FAILURE;
         }
 
-        if (FD_ISSET(f1, &inset)) {
-            sum += file_sum(f1, &read_set);
+        for (int fi = f1; fi <= max_fd; ++fi) {
+            if (FD_ISSET(fi, &inset)) {
+                sum += file_sum(fi, &read_set);
+            }
         }
-
-        if (FD_ISSET(f2, &inset)) {
-            sum += file_sum(f2, &read_set);
-        }
-
     }
 
     printf("%d\n", sum);
