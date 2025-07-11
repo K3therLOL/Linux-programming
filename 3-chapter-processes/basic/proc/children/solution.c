@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #define BUF 10
+
 size_t get_pidmax(void)
 {
     FILE *fp = fopen("/proc/sys/kernel/pid_max", "r");
@@ -76,7 +76,7 @@ void rec_children(pid_t pid, int *cnt)
     }
     
 clean:
-    if(fp != ULL) {
+    if(fp != NULL) {
         fclose(fp);
     }
     free(children);

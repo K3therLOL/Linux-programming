@@ -11,7 +11,7 @@ lib/%.o: %.c $(HEAD)
 	$(CC) -c $< -o $@
 
 $(EXE): $(OBJ)
-	$(CC) $^ -o $@
+	$(CC) -fPIE $^ -o $@
 
 clean:
 	rm $(OBJ) $(EXE)

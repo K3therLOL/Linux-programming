@@ -1,4 +1,3 @@
-
 /* Пример перессылки на другой файл через смену содержимого символической ссылки */
 
 #define _GNU_SOURCE
@@ -34,13 +33,13 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    /* Add one to the link size, so that we can determine whether
+    /* add one to the link size, so that we can determine whether
        the buffer returned by readlink() was truncated. */
 
     bufsiz = sb.st_size + 1;
 
-    /* Some magic symlinks under (for example) /proc and /sys
-       report 'st_size' as zero. In that case, take PATH_MAX as
+    /* some magic symlinks under (for example) /proc and /sys
+       report 'st_size' as zero. in that case, take path_max as
        a "good enough" estimate. */
 
     if (sb.st_size == 0)
@@ -60,8 +59,9 @@ int main(int argc, char **argv)
 
     printf("'%s' points to '%.*s'\n", argv[1], (int) nbytes, buf);
 
-    if (nbytes == bufsiz)
-        printf("(Returned buffer may have been truncated)\n");
+    if (nbytes == bufsiz) {
+        printf("(returned buffer may have been truncated)\n");
+    }
 
     free(buf);
     exit(EXIT_SUCCESS);
